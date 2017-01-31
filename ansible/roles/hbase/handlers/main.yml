@@ -1,0 +1,6 @@
+---
+# handlers file for hbase
+- name: Restart Hbase
+  service: name=hbase state=restarted
+  tags:
+    - hbase

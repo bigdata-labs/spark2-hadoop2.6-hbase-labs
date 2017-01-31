@@ -1,0 +1,16 @@
+- hosts: hadoop_namenode
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  tasks:
+    - name: copy wordcount.txt to namenode
+      copy:
+        src: "./files/{{wordcount_file_name}}"
+        dest: "{{hadoop_home}}"
+        owner: "{{hadoop_user}}"
+        group: "{{hadoop_group}}"
+
+    - name: put wordcount.txt to hdfs
+      become_user: "{{hadoop_user}}"
+      shell: "{{hadoop_home}}/bin/hdfs dfs -put {{hadoop_home}}/{{wordcount_file_name}} /"
+      ignore_errors: True

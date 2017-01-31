@@ -1,0 +1,46 @@
+[zookeeper]
+192.168.11.151 myid=1
+192.168.11.152 myid=2
+192.168.11.153 myid=3
+
+[offlinenode1]
+192.168.11.151 ip=192.168.11.151
+
+[offlinenode2]
+192.168.11.152 ip=192.168.11.152
+
+[offlinenode3]
+192.168.11.153 ip=192.168.11.153
+
+[offlinenode4]
+192.168.11.154 ip=192.168.11.154
+
+[all]
+192.168.11.[151:154]
+
+[spark_master]
+192.168.11.152 ip=192.168.11.152 spark_is_master="true"
+
+[spark_slaves]
+192.168.11.153 ip=192.168.11.153 spark_is_slave="true"
+192.168.11.151 ip=192.168.11.151 spark_is_slave="true"
+
+[spark_slave1]
+192.168.11.151 ip=192.168.11.151 spark_is_slave="true"
+
+[hadoop_namenode]
+192.168.11.151 ip=192.168.11.151 hadoop_is_namenode="true"
+
+[hadoop_datanodes]
+192.168.11.153 ip=192.168.11.153 hadoop_is_datanode="true"
+192.168.11.152 ip=192.168.11.152 hadoop_is_datanode="true"
+
+[hbase_master]
+192.168.11.153 ip=192.168.11.153
+
+[hbase_slaves]
+192.168.11.152 ip=192.168.11.152
+192.168.11.151 ip=192.168.11.151
+
+[ganglia_master]
+192.168.11.154 ip=192.168.11.154

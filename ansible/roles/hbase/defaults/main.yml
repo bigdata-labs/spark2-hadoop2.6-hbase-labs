@@ -1,0 +1,12 @@
+---
+# defaults file for hbase
+hbase_version: 1.2.4
+hbase_tar_name: "hbase-{{hbase_version}}-bin.tar.gz"
+hbase_download_url: "http://apache.stu.edu.tw/hbase/{{hbase_version}}/{{hbase_tar_name}}"
+hbase_user: hbase
+hbase_group: hbase
+hbase_user_home: "/home/{{hbase_user}}"
+hbase_home: "{{hbase_user_home}}/hbase"
+hbase_log_directory: "{{hbase_home}}/log"
+hbase_tmp_dir: "{{hbase_user_home}}/tmp"
+hbase_local_dir: "{{hbase_user_home}}/local_storage"

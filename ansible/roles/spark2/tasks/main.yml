@@ -1,0 +1,174 @@
+---
+
+- name: create spark group
+  group:
+    name: "{{spark_group}}"
+    system: yes
+  tags:
+    - spark
+
+- name: create spark user
+  user:
+    name: "{{spark_user}}"
+    group: "{{spark_group}}"
+    system: yes
+  tags:
+    - spark
+
+- name: create .ssh folder
+  file:
+    path: "{{spark_user_home}}/.ssh"
+    state: directory
+    mode: 0700
+    owner: "{{ spark_user }}"
+    group: "{{ spark_group }}"
+  tags:
+    - spark
+
+- name: copy ssh key
+  copy:
+    src: "{{item}}"
+    dest: "{{spark_user_home}}/.ssh"
+    owner: "{{ spark_user }}"
+    group: "{{ spark_group }}"
+    mode: 0600
+  with_items:
+    - id_rsa
+    - id_rsa.pub
+    - authorized_keys
+  tags:
+    - spark
+
+- name: cp spark
+  copy:
+    src: "{{spark_tar_name}}"
+    dest: /tmp/{{spark_tar_name}}
+    owner: "{{ spark_user }}"
+    group: "{{ spark_group }}"
+  ignore_errors: True
+  tags:
+    - spark
+
+- stat:
+    path: "/tmp/{{spark_tar_name}}"
+  register: spark_package
+  tags:
+    - spark
+
+
+- name: download spark from "{{ spark_download_url }}"
+  get_url:
+    url: "{{spark_download_url}}"
+    dest: "/tmp/{{spark_tar_name}}"
+  when: spark_package.stat.exists == False
+  tags:
+    - spark
+
+
+- name: unarchive spark
+  unarchive:
+    src: "/tmp/{{spark_tar_name}}"
+    dest: "{{ spark_user_home }}"
+    owner: "{{ spark_user }}"
+    group: "{{ spark_group }}"
+    copy: no
+  tags:
+    - spark
+
+- name: link spark directory "{{spark_user_home}}/spark-{{spark_version}}-bin-hadoop{{hadoop_version}}"
+  file:
+    dest: "{{spark_home}}"
+    src: "{{spark_user_home}}/spark-{{spark_version}}-bin-hadoop{{hadoop_version}}"
+    state: link
+    owner: "{{ spark_user }}"
+    group: "{{ spark_group }}"
+  tags:
+    - spark
+
+- name: create spark log directory
+  file:
+    path: "{{spark_log_directory}}"
+    state: directory
+    owner: "{{ spark_user }}"
+    group: "{{ spark_group }}"
+  tags:
+    - spark
+
+- name: create hadoop native lib directory
+  file:
+    path: "{{spark_native_lib}}"
+    state: directory
+    owner: "{{ spark_user }}"
+    group: "{{ spark_group }}"
+  tags:
+    - spark
+
+- name: copy hadoop native lib
+  copy:
+    src: "{{hadoop_native_lib}}"
+    dest: /tmp/hadoop-native.tar
+  tags:
+    - spark
+
+- name: unarchive native hadoop lib
+  unarchive:
+    src: "/tmp/hadoop-native.tar"
+    dest: "{{spark_native_lib}}"
+    owner: "{{ spark_user }}"
+    group: "{{ spark_group }}"
+    copy: no
+  tags:
+    - spark
+
+- name: config spark
+  template:
+    src: "{{item}}"
+    dest: "{{spark_home}}/conf/"
+    owner: "{{ spark_user }}"
+    group: "{{ spark_group }}"
+  with_items:
+    - ./conf/slaves
+    - ./conf/spark-env.sh
+    - ./conf/log4j.properties
+  tags:
+    - spark
+
+- name: config spark-master.service
+  template:
+    src: spark-master.service
+    dest: /etc/systemd/system/
+    owner: "{{ spark_user }}"
+    group: "{{ spark_group }}"
+    mode: 0700
+  when: spark_is_master is defined and  spark_is_master == "true"
+  tags:
+    - spark
+
+- name: start-master when spark_is_master == true
+  service:
+    name: spark-master
+    state: restarted
+    # enable: true
+  when: spark_is_master is defined and  spark_is_master == "true"
+  tags:
+    - spark
+
+- name: config spark-slave.service
+  template:
+    src: spark-slave.service
+    dest: /etc/systemd/system/
+    owner: "{{ spark_user }}"
+    group: "{{ spark_group }}"
+    mode: 0700
+  when: spark_is_slave is defined and spark_is_slave == "true"
+  tags:
+    - spark
+
+- name: start-slave when spark_is_slave == true
+  service:
+    name: spark-slave
+    state: restarted
+    # enable: true
+  when: spark_is_slave is defined and spark_is_slave == "true"
+  tags:
+    - spark

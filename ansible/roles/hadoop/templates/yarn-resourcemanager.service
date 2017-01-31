@@ -1,0 +1,15 @@
+[Unit]
+Description=yarn-resourcemanager
+
+[Service]
+Type=simple
+User={{hadoop_user}}
+Group={{hadoop_group}}
+Restart=on-failure
+WorkingDirectory={{hadoop_home}}
+ExecStart="/bin/sh shell {{ hadoop_home }}/sbin/yarn-daemon.sh start resourcemanager"
+ExecStop="/bin/sh shell {{ hadoop_home }}/sbin/yarn-daemon.sh stop resourcemanager"
+PIDFile=/tmp/yarn-resourcemanager.pid
+
+[Install]
+WantedBy=multi-user.target

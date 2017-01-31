@@ -1,0 +1,213 @@
+---
+# - name: install gtar
+#   apt:
+#     name: gtar
+#     state: installed
+
+- lineinfile:
+    dest: /etc/hosts
+    state: absent
+    regexp: "{{item}}"
+  with_items:
+    - '^127\.0\.0\.1.*?\n'
+    - '^127\.0\.1\.1.*?\n'
+
+- name: create hbase group
+  group:
+    name: "{{hbase_group}}"
+    system: yes
+  tags:
+    - hbase
+
+- name: create hbase user
+  user:
+    name: "{{hbase_user}}"
+    group: "{{hbase_group}}"
+    system: yes
+  tags:
+    - hbase
+
+- name: create .ssh folder
+  file:
+    path: "{{hbase_user_home}}/.ssh"
+    state: directory
+    mode: 0700
+    owner: "{{ hbase_user }}"
+    group: "{{ hbase_group }}"
+  tags:
+    - hbase
+
+- name: copy ssh key
+  copy:
+    src: "{{item}}"
+    dest: "{{hbase_user_home}}/.ssh"
+    owner: "{{ hbase_user }}"
+    group: "{{ hbase_group }}"
+    mode: 0600
+  with_items:
+    - id_rsa
+    - id_rsa.pub
+    - authorized_keys
+  tags:
+    - hbase
+
+
+
+
+# - name: download hadoop from "{{ hadoop_download_url }}"
+#   get_url:
+#     url: "{{hadoop_download_url}}"
+#     dest: /tmp/hadoop.tgz
+#   when: hadoop_package.stat.exists == False
+#   tags:
+#     - hadoop
+#
+# - stat: path="{{hbase_user_home}}/hbase-{{hbase_version}}"
+#   register: hbase_downloaded
+#   tags:
+#     - hbase
+#
+# - shell: "tar -zxvf /tmp/hbase.tar.gz -C {{hbase_user_home}}"
+#   when: hbase_downloaded.stat.exists == False
+#   tags:
+#     - hbase
+- name: "copy {{hbase_tar_name}}"
+  copy:
+    src: "{{hbase_tar_name}}"
+    dest: "/home/{{hbase_user}}/{{hbase_tar_name}}"
+    owner: "{{hbase_user}}"
+    group: "{{hbase_group}}"
+  ignore_errors: True
+  tags:
+    - hbase
+
+- name: copied
+  stat:
+    path: "/home/{{hbase_user}}/{{hbase_tar_name}}"
+  register: copiedHbase
+  tags:
+    - hbase
+
+- name: "Download Hbase"
+  become: true
+  become_user: "{{hbase_user}}"
+  get_url:
+    dest: "/home/{{ hbase_user }}/{{hbase_tar_name}}"
+    url: "{{hbase_download_url}}"
+    owner: "{{ hbase_user }}"
+  when: copiedHbase.stat.exists == False
+  tags:
+    - hbase
+
+- name: "Unpack hbase"
+  become: true
+  become_user: "{{ hbase_user }}"
+  unarchive:
+    copy: false
+    dest: "/home/{{hbase_user}}"
+    src: "/home/{{ hbase_user }}/{{hbase_tar_name}}"
+  tags:
+    - hbase
+
+
+- name: link hbase directory "{{hbase_user_home}}/hbase-{{hbase_version}}"
+  file:
+    dest: "{{hbase_home}}"
+    src: "{{hbase_user_home}}/hbase-{{hbase_version}}"
+    state: link
+    owner: "{{ hbase_user }}"
+    group: "{{ hbase_group }}"
+  tags:
+    - hbase
+
+- name: create hbase log directory
+  file:
+    path: "{{hbase_log_directory}}"
+    state: directory
+    owner: "{{ hbase_user }}"
+    group: "{{ hbase_group }}"
+  tags:
+    - hbase
+
+- name: "create {{hbase_tmp_dir}}"
+  file:
+    path: "{{hbase_tmp_dir}}"
+    mode: "u=rw,g=rw,o=rw"
+    owner: "{{hbase_user}}"
+    group: "{{hbase_group}}"
+    state: directory
+  tags:
+    - hbase
+
+
+- name: "create {{hbase_local_dir}}"
+  file:
+    path: "{{item}}"
+    mode: "u=rw,g=rw,o=rw"
+    owner: "{{hbase_user}}"
+    group: "{{hbase_group}}"
+    state: directory
+  with_items:
+    - "{{hbase_local_dir}}"
+    - "{{hbase_local_dir}}/jars"
+  tags:
+    - hbase
+
+- name: config hbase
+  template:
+    src: "{{item}}"
+    dest: "{{hbase_home}}/conf/"
+    owner: "{{ hbase_user }}"
+    group: "{{ hbase_group }}"
+    force: true
+  with_items:
+    - conf/regionservers
+    - conf/backup-masters
+    - conf/hbase-site.xml
+    - conf/hbase-env.sh
+  tags:
+    - hbase
+#
+# - name: stop hbase
+#   become_user: "{{hbase_user}}"
+#   action: "shell {{ hbase_home }}/bin/stop-hbase.sh"
+#   ignore_errors: yes
+#
+# - name: start hbase
+#   become_user: "{{hbase_user}}"
+#   action: "shell {{ hbase_home }}/bin/start-hbase.sh"
+
+- name: init /etc/profile
+  lineinfile:
+    dest: /etc/profile
+    state: present
+    line: "{{item}}"
+  with_items:
+    - "JAVA_HOME={{JAVA_HOME}}"
+    - "HBASE_HOME={{hbase_home}}"
+    - "HBASE_CLASSPATH={{hbase_home}}/conf"
+  tags:
+    - hbase
+
+- name: Setup hbase systemd script
+  template:
+    src: hbase.service
+    dest: "/etc/systemd/system/"
+    owner: root
+    group: root
+    mode: 0700
+  when: hbase_is_master is defined and  hbase_is_master == "true"
+  tags:
+    - hbase
+
+- name: reload systemctl daemon
+  command: systemctl daemon-reload
+  when: hbase_is_master is defined and  hbase_is_master == "true"
+  tags:
+    - hbase
+
+- name: Restart Hbase
+  service: name=hbase state=restarted
+  when: hbase_is_master is defined and  hbase_is_master == "true"
+  tags:
+    - hbase

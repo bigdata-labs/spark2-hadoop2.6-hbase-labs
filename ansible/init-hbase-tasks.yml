@@ -1,0 +1,27 @@
+- hosts: hadoop_namenode
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  tasks:
+    - name: create table
+      become_user: "{{hbase_user}}"
+      shell: "echo  create 'users', 'info', 'account' | {{hbase_home}}/bin/hbase shell "
+      ignore_errors: True
+      tags:
+        - hbase
+
+    - name: "copy {{users_csv_filename}} to namenode"
+      copy:
+        src: "./files/{{users_csv_filename}}"
+        dest: "{{hadoop_home}}"
+        owner: "{{hadoop_user}}"
+        group: "{{hadoop_group}}"
+      tags:
+        - hbase
+
+    - name: put users.csv to hdfs
+      become_user: "{{hadoop_user}}"
+      shell: "{{hadoop_home}}/bin/hdfs dfs -put {{hadoop_home}}/{{users_csv_filename}} /"
+      ignore_errors: True
+      tags:
+        - hbase

@@ -1,0 +1,50 @@
+---
+
+group: stable
+dist: trusty
+branches:
+  only:
+    - develop
+    - master
+
+language: python
+python: "2.7"
+
+env:
+  - ANSIBLE_INSTALL_VERSION=1.9.4
+  - ANSIBLE_INSTALL_VERSION=2.0.0.2
+  - ANSIBLE_INSTALL_VERSION=2.0.2.0
+  - ANSIBLE_INSTALL_VERSION=2.1.1.0
+
+before_install:
+  # Make sure everything's up to date.
+  - become apt-get update -qq
+
+install:
+  # Install Ansible.
+  - pip install ansible==${ANSIBLE_INSTALL_VERSION}
+
+script:
+  # Install Role Dependencies
+  - make test_deps
+  # Check the role/playbook's syntax.
+  - ansible-playbook --syntax-check --list-tasks -i tests/vagrant/inventory tests/vagrant/test.yml
+  # First run
+  - cd tests/vagrant/
+  # Test the "build" stage
+  - ansible-playbook -i inventory test.yml --tags=build --connection=local
+  - >
+    ansible-playbook -i inventory test.yml --tags=build --connection=local
+    | grep -q 'changed=0.*failed=0'
+    && (echo 'Idempotence test: pass' && exit 0)
+    || (echo 'Idempotence test: fail' && exit 1)
+  # Test the "configure" stage
+  - ansible-playbook -i inventory test.yml --tags=configure --connection=local
+  - >
+    ansible-playbook -i inventory test.yml --tags=configure --connection=local
+    | grep -q 'changed=0.*failed=0'
+    && (echo 'Idempotence test: pass' && exit 0)
+    || (echo 'Idempotence test: fail' && exit 1)
+
+notifications:
+  webhooks: https://galaxy.ansible.com/api/v1/notifications/

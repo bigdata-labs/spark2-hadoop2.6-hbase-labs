@@ -1,0 +1,16 @@
+---
+# defaults file for spark2
+spark_version: 2.0.1
+hadoop_version: 2.6
+spark_download_url:
+ "https://mirrors.tuna.tsinghua.edu.cn/apache/spark/spark-{{spark_version}}/spark-{{spark_version}}-bin-hadoop{{hadoop_version}}.tgz"
+spark_tar_name: "spark-{{spark_version}}-bin-hadoop{{hadoop_version}}.tgz"
+spark_user: spark
+spark_group: spark
+spark_user_home: "/home/{{spark_user}}"
+spark_home: "{{spark_user_home}}/spark"
+spark_log_directory: "{{spark_home}}/log"
+# hadoop_native_lib_url: "https://bintray.com/sequenceiq/sequenceiq-bin/download_file?file_path=hadoop-native-64-2.6.0.tar"
+hadoop_native_version: 2.6.0
+hadoop_native_lib: "hadoop-native-64-{{hadoop_native_version}}.tar"
+hadoop_native_lib_url: "http://dl.bintray.com/sequenceiq/sequenceiq-bin/:hadoop-native-64-2.6.0.tar"

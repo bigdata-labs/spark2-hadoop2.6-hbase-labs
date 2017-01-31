@@ -1,0 +1,16 @@
+[Unit]
+Description=Spark
+Before=
+After=network.target
+
+[Service]
+Type=forking
+User={{ spark_user }}
+Group={{ spark_group }}
+Environment=JAVA_HOME={{ JAVA_HOME }}
+ExecStart={{ spark_home }}/sbin/start-master.sh -h {{spark_master_hostname}} -p 7077
+ExecStop={{ spark_home }}/sbin/stop-master.sh -h {{spark_master_hostname}} -p 7077
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target

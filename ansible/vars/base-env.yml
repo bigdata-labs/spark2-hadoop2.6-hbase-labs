@@ -1,0 +1,111 @@
+---
+app_version: 0.0.4-SNAPSHOT
+app_name: "spark-app-skeleton-{{app_version}}"
+app_name_with_dependencies: "{{app_name}}-jar-with-dependencies"
+app_main_class: codes.showme.WordCount
+wordcount_file_name: wordcount.txt
+wordcount_result_directory: /wordcount_result/
+users_csv_filename: users.csv
+
+
+
+
+### JVM
+JAVA_HOME: /usr/lib/jvm/java
+
+### zookeeper
+zk1_host: 192.168.11.151
+zk2_host: 192.168.11.152
+zk3_host: 192.168.11.153
+kafka1_host: 192.168.11.151
+zookeeper_heap_size: 500m
+
+zk_hosts_without_port:
+  - zk1
+  - zk2
+  - zk3
+
+zk_hosts:
+  - "zk1:2181"
+  - "zk2:2181"
+  - "zk3:2181"
+zookeeper_connect: "{{ zk_hosts | join(',') }}"
+###spark hadoop
+spark_app_with_dependencies_path: "./files/{{app_name_with_dependencies}}.jar"
+spark_app_path: "./files/{{app_name}}.jar"
+spark_version: 2.0.1
+spark_eventLog_dir: /tmp
+spark_master_hostname: 192.168.11.152
+spark_master_port: 7077
+spark_master_host_port: "spark://{{spark_master_hostname}}:{{spark_master_port}}"
+spark_slaves: |
+  192.168.11.151
+  192.168.11.153
+spark_master_ip: 192.168.11.152
+spark_slave1_ip: 192.168.11.153
+spark_slave2_ip: 192.168.11.151
+
+spark_user: spark
+spark_group: spark
+spark_user_home: "/home/{{spark_user}}"
+spark_home: "{{spark_user_home}}/spark"
+spark_log_directory: "{{spark_home}}/log"
+spark_native_lib: "{{spark_home}}/lib/native"
+
+hbase_example_dependencies_folder: "{{spark_home}}/hbaseexmaple-jars"
+wordcount_dependencies_folder: "{{spark_home}}/wordcount-jars"
+
+
+### hadoop
+hadoop_version: 2.6
+hadoop_namenode_ip: 192.168.11.151
+hadoopnamenode_port: 8020
+hadoop_datanode1: 192.168.11.151
+hadoop_datanode2: 192.168.11.153
+hadoopnamenode: hadoopnamenode
+HADOOP_HEAPSIZE: 1000
+hadoop_user: hadoop
+hadoop_group: hadoop
+hadoop_user_home: "/home/{{hadoop_user}}"
+hadoop_home: "{{hadoop_user_home}}/hadoop"
+hadoop_datanodes:
+  - hadoopdatanode1
+  - hadoopdatanode2
+
+### hbase
+hbase_backup_masters: offlinenode1
+hbase_user: hbase
+hbase_group: hbase
+hbase_master_ip: hbasemaster
+hbase_user_home: "/home/{{hbase_user}}"
+hbase_home: "{{hbase_user_home}}/hbase"
+hbase_regionservers:
+  - offlinenode1
+  - offlinenode2
+
+### ganglia
+ganglia_master_host: gangliamaster
+ganglia_cluster_datasource: production
+ganglia_user: root
+ganglia_group: root
+ganglia_gmonds: "offlinenode1 offlinenode2 offlinenode3 offlinenode4"
+
+###common
+hosts: |
+  {{ip}} {{ ansible_nodename }}
+  192.168.11.151 offlinenode1
+  192.168.11.152 offlinenode2
+  192.168.11.153 offlinenode3
+  192.168.11.154 offlinenode4
+  192.168.11.152 sparkmaster
+  192.168.11.151 sparkslave1
+  192.168.11.152 sparkslave2
+  192.168.11.151 hadoopnamenode
+  192.168.11.152 hadoopdatanode1
+  192.168.11.153 hadoopdatanode2
+  192.168.11.153 hbasemaster
+  192.168.11.154 gangliamaster
+  {{ kafka1_host }} kafka1
+  {{ zk1_host }} zk1
+  {{ zk2_host }} zk2
+  {{ zk3_host }} zk3

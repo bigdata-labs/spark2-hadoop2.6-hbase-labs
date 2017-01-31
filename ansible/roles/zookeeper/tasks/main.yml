@@ -1,0 +1,25 @@
+---
+
+- group: name={{zookeeper.group}} system=yes
+  tags:
+    - zookeeper
+
+- user: name={{zookeeper.user}} group={{zookeeper.group}} system=yes
+  tags:
+    - zookeeper
+
+## zookeeper 启动要加入此hosts 否则EndOfStreamException:
+## Unable to read additional data from client sessionid 0x0, likely client has closed socket
+# - name: add localhost into /etc/hosts
+#   lineinfile: line="127.0.0.1 localhost.localdomain localhost" dest="/etc/hosts"
+
+
+- name: Install Zookeeper
+  include: build.yml
+  tags:
+    - build
+
+- name: Configure Zookeeper
+  include: configure.yml
+  tags:
+    - configure

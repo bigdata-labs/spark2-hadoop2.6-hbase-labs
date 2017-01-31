@@ -1,0 +1,15 @@
+[Unit]
+Description=yarn-nodemanager
+
+[Service]
+Type=simple
+User={{hadoop_user}}
+Group={{hadoop_group}}
+Restart=on-failure
+WorkingDirectory={{hadoop_home}}
+ExecStart="/bin/sh  shell {{ hadoop_home }}/sbin/yarn-daemon.sh start nodemanager"
+ExecStop="/bin/sh shell {{ hadoop_home }}/sbin/yarn-daemon.sh stop nodemanager"
+PIDFile=/tmp/yarn-nodemanager.pid
+
+[Install]
+WantedBy=multi-user.target

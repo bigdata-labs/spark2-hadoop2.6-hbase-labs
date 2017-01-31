@@ -1,0 +1,63 @@
+---
+- hosts: spark_slaves,spark_master
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  vars:
+    isUseWordcountFile: "true"
+  tasks:
+    - name: delete jars
+      file:
+        path: "{{item}}"
+        state: absent
+      with_items:
+        - "{{hbase_example_dependencies_folder}}/"
+        - "{{spark_home}}/{{app_name}}.jar"
+      ignore_errors: true
+
+    - name: create hbase example's dependency jars directory
+      file:
+        path: "{{hbase_example_dependencies_folder}}"
+        state: directory
+        owner: "{{ spark_user }}"
+        group: "{{ spark_group }}"
+      tags:
+        - spark
+
+    - name: copy dependency jar to spark
+      copy:
+        src: "{{spark_app_with_dependencies_path}}"
+        dest: "{{hbase_example_dependencies_folder}}"
+        owner: "{{spark_user}}"
+        group: "{{spark_group}}"
+        force: true
+
+    - name: copy jar to spark
+      copy:
+        src: "{{spark_app_path}}"
+        dest: "{{spark_home}}/"
+        owner: "{{spark_user}}"
+        group: "{{spark_group}}"
+        force: true
+
+- hosts: spark_slave1
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  vars:
+    app_main_class: codes.showme.HbaseExample
+  tasks:
+    - name: find jars
+      find:
+        paths: "{{hbase_example_dependencies_folder}}/"
+        patterns: "*.jar"
+      register: jars
+
+    - name: app's depenency
+      debug:
+        msg: "{{ jars.files | map(attribute='path') | join(',') }}"
+
+    - name: submit "{{ip}} deploy codes.showme.HbaseExample"
+      become: true
+      become_user: "{{spark_user}}"
+      shell: "export SPARK_LOCAL_IP={{ip}};{{spark_home}}/bin/spark-submit --class codes.showme.HbaseExample --master {{spark_master_host_port}} --jars {{ jars.files | map(attribute='path') | join(',') }} --deploy-mode cluster --executor-memory 1G  --executor-cores 1 file://{{spark_home}}/{{app_name}}.jar"

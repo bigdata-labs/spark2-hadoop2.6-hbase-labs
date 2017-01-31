@@ -1,0 +1,67 @@
+---
+- name: Setup myid
+  become: yes
+  become_user: "root"
+  template:
+    owner: "{{ zookeeper.user }}"
+    group: "{{ zookeeper.group }}"
+    dest: "{{ zookeeper.data_dir }}/myid"
+    src: myid.j2
+  notify:
+   - restart zookeeper
+  tags:
+    - zookeeper
+
+- name: Setup zoo.cfg file
+  template:
+    owner: "{{ zookeeper.user }}"
+    group: "{{ zookeeper.group }}"
+    dest: "{{ zookeeper.conf_dir }}/zoo.cfg"
+    mode: 0644
+    src: zoo.cfg.j2
+  notify:
+   - restart zookeeper
+  tags:
+    - zookeeper
+
+- name: Create Zookeeper log4j config
+  template:
+    owner: "{{ zookeeper.user }}"
+    group: "{{ zookeeper.group }}"
+    dest: "{{ zookeeper.conf_dir }}/log4j.properties"
+    mode: 0644
+    src: log4j.properties.j2
+  notify:
+    - restart zookeeper
+  tags:
+    - zookeeper
+
+- name: Setup Zookeeper environment config
+  template:
+    owner: "{{ zookeeper.user }}"
+    group: "{{ zookeeper.group }}"
+    dest: "{{ zookeeper.conf_dir }}/environment"
+    mode: 0644
+    src: environment.j2
+  notify:
+    - restart zookeeper
+  tags:
+    - zookeeper
+
+- name: start and enable zookeeper.service
+  service:
+    name: zookeeper.service
+    state: restarted
+    enabled: true
+  tags:
+    - zookeeper
+
+
+- name: Wait for Zookeeper port
+  wait_for:
+    host: "{{ip}}"
+    port: "{{ zookeeper.client_port }}"
+    state: started
+    timeout: 30
+  tags:
+    - zookeeper

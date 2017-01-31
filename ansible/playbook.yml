@@ -1,0 +1,87 @@
+---
+- hosts: all
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  roles:
+    - common
+
+
+
+- hosts: zookeeper
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  roles:
+    - jdk8
+    - zookeeper
+
+
+- hosts: hadoop_namenode
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  roles:
+    - {role: "hadoop", hadoop_is_namenode: "true"}
+
+
+- hosts: hadoop_datanodes
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  roles:
+    - {role: "hadoop", hadoop_is_datanode: "true"}
+
+
+- include: ./init-hadoop-tasks.yml
+
+- hosts: hbase_slaves
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  roles:
+    - hbase
+
+- hosts: hbase_master
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  roles:
+    - {role: "hbase", hbase_is_master: "true"}
+
+
+- include: ./init-hbase-tasks.yml
+
+- hosts: spark_master
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  roles:
+    - jdk8
+    - {role: "spark2", spark_is_master: "true"}
+
+
+- hosts: spark_slaves
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  roles:
+    - jdk8
+    - {role: "spark2", spark_is_slave: "true"}
+
+
+- hosts: ganglia_master
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  roles:
+    - { role: "ganglia3", ganglia_gmetad: "gangliamaster", ganglia_type_of_node: "master"}
+    - { role: "ganglia3", ganglia_gmetad: "gangliamaster", ganglia_type_of_node: "web"}
+
+
+- hosts: all
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  roles:
+    - {role: "ganglia3", ganglia_gmetad: "gangliamaster", ganglia_type_of_node: "slave"}

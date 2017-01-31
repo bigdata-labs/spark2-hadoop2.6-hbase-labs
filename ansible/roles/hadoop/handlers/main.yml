@@ -1,0 +1,26 @@
+---
+- name: restart hadoop-dfs
+  action: shell {{ hadoop_home }}/sbin/hadoop-daemon.sh  --script hdfs stop namenode; {{ hadoop_home }}/sbin/hadoop-daemon.sh  --script hdfs start namenode
+  when: hadoop_is_namenode is defined and  hadoop_is_namenode == "true"
+
+- name: restart yarn-resourcemanager
+  action: shell {{ hadoop_home }}/sbin/yarn-daemon.sh stop resourcemanager; {{ hadoop_home }}/sbin/yarn-daemon.sh start resourcemanager
+  when: hadoop_is_namenode is defined and  hadoop_is_namenode == "true"
+
+- name: restart hadoop-datanode
+  action: shell {{ hadoop_home }}/sbin/hadoop-daemon.sh  --script hdfs stop datanode; {{ hadoop_home }}/sbin/hadoop-daemon.sh  --script hdfs start datanode
+  when: hadoop_is_datanode is defined and hadoop_is_datanode == "true"
+
+- name: restart yarn-nodemanager
+  action: shell {{ hadoop_home }}/sbin/yarn-daemon.sh stop nodemanager; {{ hadoop_home }}/sbin/yarn-daemon.sh start nodemanager
+  when: hadoop_is_datanode is defined and hadoop_is_datanode == "true"
+
+- name: refreshDFSNodes
+  command: "{{ hadoop_home }}/bin/hdfs dfsadmin -refreshNodes"
+  when: hadoop_is_namenode is defined and  hadoop_is_namenode == "true"
+  ignore_errors: yes
+
+- name: refreshYarnNodes
+  command: "{{ hadoop_home }}/bin/yarn rmadmin -refreshNodes"
+  when: hadoop_is_namenode is defined and  hadoop_is_namenode == "true"
+  ignore_errors: yes

@@ -1,0 +1,21 @@
+---
+
+zookeeper:
+  client_port: 2181
+  connect_port: 2888
+  conf_dir: /home/zookeeper/zookeeper/conf
+  data_dir: /home/zookeeper/lib
+  election_port: 3888
+  group: zookeeper
+  user: zookeeper
+  hosts:
+    - 192.168.11.151
+    - 192.168.11.152
+    - 192.168.11.153
+  install_dir: /home/zookeeper/zookeeper
+  # java_opts: "-Xmx{{ (ansible_memtotal_mb / 2) | int }}m -Xms{{ (ansible_memtotal_mb / 2) | int }}m"
+  java_opts: "-Xmx{{zookeeper_heap_size}} -Xms{{zookeeper_heap_size}}"
+  # note this is for application logs, not the actual zookeeper data logs
+  log_dir: /home/zookeeper/log
+  log_level: WARN
+  version: 3.4.9

@@ -1,0 +1,15 @@
+[Unit]
+Description=dfs
+
+[Service]
+Type=simple
+User={{hadoop_user}}
+Group={{hadoop_group}}
+Restart=on-failure
+WorkingDirectory={{hadoop_home}}
+ExecStop="/bin/sh shell {{ hadoop_home }}/sbin/hadoop-daemon.sh  --script hdfs stop namenode"
+ExecStart="/bin/sh shell {{ hadoop_home }}/sbin/hadoop-daemon.sh  --script hdfs start namenode"
+PIDFile=/tmp/hadoop-dfs.pid
+
+[Install]
+WantedBy=multi-user.target

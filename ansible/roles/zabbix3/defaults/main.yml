@@ -3,21 +3,20 @@
 zabbix_version: 3.2.3
 zabbix_user: zabbix
 zabbix_group: zabbix
+zabbix_home: /home/{{zabbix_user}}/zabbix
 zabbix_download_url: "http://repo.zabbix.com/zabbix/3.2/ubuntu/pool/main/z/zabbix/zabbix_{{zabbix_version}}.orig.tar.gz"
 zabbixserver_packages:
   - build-essential
   - gcc
   - curl
   - wget
+  - libmysqld-dev # required by zabbix server with mysql
   - libsnmp-dev
   - libcurl4-gnutls-dev
   - libxml2-dev
   - unixodbc-dev
   - libssh-dev
   - libssh2-1-dev
-  - php5-fpm
-  - php5-gd
-  - php5-mysql
   - fping
   - snmp
   - python-psycopg2

@@ -1,5 +1,4 @@
 ---
-
 - name: create spark group
   group:
     name: "{{spark_group}}"

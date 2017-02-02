@@ -13,6 +13,7 @@
     - php
     - { role: "zabbix3", zabbixType: "server"}
     - { role: "zabbix3", zabbixType: "agent"}
+    - zabbix-openresty-conf
 
 - hosts: all
   become: yes

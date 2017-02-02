@@ -7,4 +7,5 @@
     owner: root
     group: root
   tags:
-    - php-openresty  
+    - php-openresty
+  notify: restart nginx

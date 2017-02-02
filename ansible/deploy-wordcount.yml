@@ -6,7 +6,6 @@
   vars:
     isUseWordcountFile: "true"
   tasks:
-
     - name: delete jars
       file:
         path: "{{item}}"

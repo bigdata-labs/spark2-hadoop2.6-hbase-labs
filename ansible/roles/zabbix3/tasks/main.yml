@@ -15,14 +15,6 @@
   tags:
     - zabbix3
 
-- apt_repository:
-    repo: ppa:ondrej/php
-    update_cache: yes
-    state: present
-  tags:
-    - zabbix3
-
-
 - name: Install zabbixrequired system packages.
   become: yes
   apt: pkg={{ item }} state=installed update_cache=true
@@ -33,43 +25,42 @@
 
 
 - name: Download zabbix
-  get_url: url="http://liquidtelecom.dl.sourceforge.net/project/zabbix/ZABBIX%20Latest%20Stable/{{zabbix_version}}/zabbix-{{zabbix_version}}.tar.gz" dest="/home/{{ zabbix_user }}/zabbix-{{{{zabbix_version}}}}.tar.gz" mode=0440
+  get_url: url="http://liquidtelecom.dl.sourceforge.net/project/zabbix/ZABBIX%20Latest%20Stable/{{zabbix_version}}/zabbix-{{zabbix_version}}.tar.gz" dest="/home/{{ zabbix_user }}/zabbix-{{zabbix_version}}.tar.gz" mode=0440
   register: zabbix_download
   tags:
     - zabbix3
 
 
-- stat: path="/home/{{zabbix_user}}/zabbix-{{{{zabbix_version}}}}.tar.gz"
+- stat: path="/home/{{zabbix_user}}/zabbix-{{zabbix_version}}.tar.gz"
   register: zabbix_tar_stat
   tags:
     - zabbix3
 
 
-- stat: path="/home/{{zabbix_user}}/zabbix-{{{{zabbix_version}}}}"
+- stat: path="/home/{{zabbix_user}}/zabbix-{{zabbix_version}}"
   register: zabbix_extract_stat
   tags:
     - zabbix3
 
 - name:  Extract zabbix  tar
   when:  zabbix_tar_stat.stat.exists == True and zabbix_extract_stat.stat.exists == False
-  unarchive: src="/home/{{ zabbix_user }}/zabbix-{{{{zabbix_version}}}}.tar.gz" dest=/home/{{ zabbix_user }}/ copy=no owner={{ zabbix_user }} group={{ zabbix_group }}
+  unarchive: src="/home/{{ zabbix_user }}/zabbix-{{ zabbix_version }}.tar.gz" dest=/home/{{ zabbix_user }}/ copy=no owner={{ zabbix_user }} group={{ zabbix_group }}
   tags:
     - zabbix3
 
 
-- stat: path=/home/{{ zabbix_user }}/zabbix-{{{{zabbix_version}}}}/Makefile
+- stat: path=/home/{{ zabbix_user }}/zabbix-{{ zabbix_version }}/Makefile
   register: makefile_stat
   tags:
     - zabbix3
 
-
 - name: Configure Make install
   register: config_makefile
   #when: makefile_stat.stat.exists == False
-  shell: ./configure --enable-server --with-net-snmp --with-libcurl --with-libcurl2 --with-ssh2 --with-unixodbc
+  shell: "./configure  --prefix={{zabbix_home}} --enable-server --with-net-snmp --with-libcurl --with-libcurl2 --with-ssh2 --with-unixodbc --with-mysql"
   when: zabbixType == "server"
   args:
-    chdir: "zabbix-{{zabbix_version}}/"
+    chdir: "/home/{{ zabbix_user }}/zabbix-{{ zabbix_version }}/"
   tags:
     - zabbix3
 
@@ -77,10 +68,10 @@
 - name: Configure Make install
   register: config_makefile
   #when: makefile_stat.stat.exists == False
-  shell: ./configure --enable-agent
+  shell: "./configure --enable-agent --prefix={{zabbix_home}}"
   when: zabbixType == "agent"
   args:
-    chdir: "zabbix-{{zabbix_version}}/"
+    chdir: "/home/{{ zabbix_user }}/zabbix-{{ zabbix_version }}/"
   tags:
     - zabbix3
 
@@ -89,6 +80,6 @@
   become: yes
   shell: make install
   args:
-    chdir: "zabbix-{{zabbix_version}}/"
+    chdir: "/home/{{ zabbix_user }}/zabbix-{{ zabbix_version }}/"
   tags:
     - zabbix3

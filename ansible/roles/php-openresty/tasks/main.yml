@@ -1,0 +1,10 @@
+---
+# tasks file for php-openresty
+- name: zabbix.conf
+  template:
+    src: zabbix.conf
+    dest: "{{zabbix_nginx_conf}}"
+    owner: root
+    group: root
+  tags:
+    - php-openresty  

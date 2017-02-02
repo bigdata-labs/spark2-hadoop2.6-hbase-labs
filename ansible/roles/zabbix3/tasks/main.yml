@@ -1,0 +1,94 @@
+---
+# tasks file for zabbix3_2
+- name: Create zabbix user group
+  become: yes
+  group: name={{zabbix_group}} state=present
+  tags:
+    - zabbix3
+
+- name: Create zabbix user
+  become: yes
+  user:
+    name: "{{zabbix_user}}"
+    group: "{{zabbix_group}}"
+    system: true
+  tags:
+    - zabbix3
+
+- apt_repository:
+    repo: ppa:ondrej/php
+    update_cache: yes
+    state: present
+  tags:
+    - zabbix3
+
+
+- name: Install zabbixrequired system packages.
+  become: yes
+  apt: pkg={{ item }} state=installed update_cache=true
+  when: zabbixType == "server"
+  with_items: "{{ zabbixserver_packages }}"
+  tags:
+    - zabbix3
+
+
+- name: Download zabbix
+  get_url: url="http://liquidtelecom.dl.sourceforge.net/project/zabbix/ZABBIX%20Latest%20Stable/{{zabbix_version}}/zabbix-{{zabbix_version}}.tar.gz" dest="/home/{{ zabbix_user }}/zabbix-{{{{zabbix_version}}}}.tar.gz" mode=0440
+  register: zabbix_download
+  tags:
+    - zabbix3
+
+
+- stat: path="/home/{{zabbix_user}}/zabbix-{{{{zabbix_version}}}}.tar.gz"
+  register: zabbix_tar_stat
+  tags:
+    - zabbix3
+
+
+- stat: path="/home/{{zabbix_user}}/zabbix-{{{{zabbix_version}}}}"
+  register: zabbix_extract_stat
+  tags:
+    - zabbix3
+
+- name:  Extract zabbix  tar
+  when:  zabbix_tar_stat.stat.exists == True and zabbix_extract_stat.stat.exists == False
+  unarchive: src="/home/{{ zabbix_user }}/zabbix-{{{{zabbix_version}}}}.tar.gz" dest=/home/{{ zabbix_user }}/ copy=no owner={{ zabbix_user }} group={{ zabbix_group }}
+  tags:
+    - zabbix3
+
+
+- stat: path=/home/{{ zabbix_user }}/zabbix-{{{{zabbix_version}}}}/Makefile
+  register: makefile_stat
+  tags:
+    - zabbix3
+
+
+- name: Configure Make install
+  register: config_makefile
+  #when: makefile_stat.stat.exists == False
+  shell: ./configure --enable-server --with-net-snmp --with-libcurl --with-libcurl2 --with-ssh2 --with-unixodbc
+  when: zabbixType == "server"
+  args:
+    chdir: "zabbix-{{zabbix_version}}/"
+  tags:
+    - zabbix3
+
+
+- name: Configure Make install
+  register: config_makefile
+  #when: makefile_stat.stat.exists == False
+  shell: ./configure --enable-agent
+  when: zabbixType == "agent"
+  args:
+    chdir: "zabbix-{{zabbix_version}}/"
+  tags:
+    - zabbix3
+
+
+- name: Make install
+  become: yes
+  shell: make install
+  args:
+    chdir: "zabbix-{{zabbix_version}}/"
+  tags:
+    - zabbix3

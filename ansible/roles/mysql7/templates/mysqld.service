@@ -1,0 +1,19 @@
+[Unit]
+Description=mysql
+Before=
+After=network.target
+
+[Service]
+Type=simple
+User={{ mysql_user }}
+Group={{ mysql_group }}
+Environment=mysql_HOME={{ mysql_home }}
+ExecStart={{mysql_home}}/support-files/mysql.server start --basedir={{mysql_home}}  --datadir={{mysql_data_dir}}
+#--defaults-file={{mysql_cnf_file}}
+ExecStop={{mysql_home}}/support-files/mysql.server stop
+# --defaults-file={{mysql_cnf_file}}
+Restart=on-abort
+#--pid-file={{mysql_pid_path}}
+
+[Install]
+WantedBy=multi-user.target

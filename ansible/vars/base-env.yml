@@ -83,12 +83,13 @@ hbase_regionservers:
   - offlinenode1
   - offlinenode2
 
-### ganglia
-ganglia_master_host: gangliamaster
-ganglia_cluster_datasource: production
-ganglia_user: root
-ganglia_group: root
-ganglia_gmonds: "offlinenode1 offlinenode2 offlinenode3 offlinenode4"
+### nginx
+nginx_servers_path: /usr/local/nginx/nginx/conf/servers
+
+### zabbix
+zabbix_nginx_conf:  /usr/local/nginx/nginx/conf/servers
+
+
 
 ###common
 hosts: |

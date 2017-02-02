@@ -1,0 +1,21 @@
+---
+- name: Check if apache's php.ini is available
+  stat: path="/etc/php/{{ php_version }}/apache2/php.ini"
+  register: modphp
+
+- name: Check if fpm's php.ini is available
+  stat: path="/etc/php/{{ php_version }}/fpm/php.ini"
+  register: phpfpm
+
+- name: Check if cli's php.ini is available
+  stat: path="/etc/php/{{ php_version }}/cli/php.ini"
+  register: phpcli
+
+- include: 11-php-fpm.yml
+  when: phpfpm.stat.exists
+
+- include: 12-php-cli.yml
+  when: phpcli.stat.exists
+
+- include: 13-mod-php.yml
+  when: modphp.stat.exists

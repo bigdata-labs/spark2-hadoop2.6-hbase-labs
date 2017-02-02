@@ -1,0 +1,22 @@
+---
+- hosts: offlinenode4
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  tasks:
+    - apt:
+       name: apache2
+       state: absent
+  roles:
+    - mysql7
+    - openresty
+    - php
+    - { role: "zabbix3", zabbixType: "server"}
+    - { role: "zabbix3", zabbixType: "agent"}
+
+- hosts: all
+  become: yes
+  vars_files:
+    - ./vars/base-env.yml
+  roles:
+    - { role: "zabbix3", zabbixType: "agent"}

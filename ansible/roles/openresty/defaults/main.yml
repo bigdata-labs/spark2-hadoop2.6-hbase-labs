@@ -1,0 +1,8 @@
+---
+# defaults file for openresty
+openresty_download_url: https://openresty.org/download/openresty-1.9.15.1.tar.gz
+openresty_version: openresty-1.9.15.1
+nginx_conf_path:
+nginx_servers_path: /usr/local/nginx/nginx/conf/servers
+nginx_log_path: /var/log/nginx
+nginx_log_cut_path: /var/log/nginx/log_cut

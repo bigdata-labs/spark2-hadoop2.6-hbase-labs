@@ -1,0 +1,110 @@
+---
+# tasks file for mysql5_7
+- name: install softwares
+  apt: name={{item}} state=present allow_unauthenticated=yes
+  with_items:
+    - cmake
+    - libncurses5-dev
+    - libncurses5
+    - gcc
+    - libaio1
+    - g++
+    - git
+  tags:
+    - mysql7
+
+
+
+- stat:
+    path: "/usr/local/{{mysql_tar_name}}"
+  register: mysqlDownloaded
+  tags:
+    - mysql7
+
+- name: "download mysql7: {{mysql_download_url}}"
+  get_url:
+    url: "{{mysql_download_url}}"
+    dest: "/usr/local/"
+    owner: "{{mysql_user}}"
+    group: "{{mysql_group}}"
+    # checksum: "md5:cfabc622427f149a8b8301a251a0484d"
+  when: mysqlDownloaded.stat.exists == False
+  tags:
+    - mysql7
+
+- shell: "tar -zxf {{mysql_tar_name}}"
+  args:
+    chdir: /usr/local/
+  tags:
+    - mysql7
+
+
+
+- name: "create dir for mysql"
+  file:
+    path: "{{item}}"
+    state: directory
+    owner: "{{mysql_user}}"
+    group: "{{mysql_group}}"
+  with_items:
+    - "{{mysql_log_dir}}"
+    - "{{mysql_data_dir}}"
+  tags:
+    - mysql7
+
+- name: create mysql home
+  file:
+    path: "/usr/local/mysql"
+    state: directory
+    owner: "{{mysql_user}}"
+    group: "{{mysql_group}}"
+  tags:
+    - mysql7
+
+- name: cmake mysql7
+  become: yes
+  shell: "cmake . -DCMAKE_INSTALL_PREFIX={{mysql_home}} -DWITH_BOOST=boost -DMYSQL_DATADIR={{mysql_data_dir}} -DSYSCONFDIR=/etc   -DWITH_INNOBASE_STORAGE_ENGINE=1 -DWITH_PARTITION_STORAGE_ENGINE=1 -DWITH_FEDERATED_STORAGE_ENGINE=1 -DWITH_BLACKHOLE_STORAGE_ENGINE=1 -DWITH_MYISAM_STORAGE_ENGINE=1 -DENABLED_LOCAL_INFILE=1 -DENABLE_DTRACE=0 -DDEFAULT_CHARSET=utf8mb4 -DDEFAULT_COLLATION=utf8mb4_general_ci -DWITH_EMBEDDED_SERVER=1"
+  args:
+    chdir: "/usr/local/{{mysql_tar_dir_name}}"
+  tags:
+    - mysql7
+
+- name: make -j
+  become: yes
+  become_user: root
+  shell: "make"
+  args:
+    chdir: "/usr/local/{{mysql_tar_dir_name}}"
+  tags:
+    - mysql7
+
+- name: make install
+  become: yes
+  shell: "make install"
+  args:
+    chdir: "/usr/local/{{mysql_tar_dir_name}}"
+  tags:
+    - mysql7
+
+
+- file:
+    path: "{{mysql_home}}"
+    state: directory
+    recurse: true
+    owner: "{{mysql_user}}"
+    group: "{{mysql_group}}"
+  tags:
+    - mysql7
+
+- command: "ls {{mysql_data_dir}}"
+  register: mysqldataContents
+
+- name: init mysql
+  become: yes
+  shell: "{{item}}"
+  when: mysqldataContents.stdout == ""
+  with_items:
+    - "{{mysql_home}}/bin/mysqld  --initialize-insecure --console --explicit_defaults_for_timestamp --basedir={{mysql_home}} --datadir={{mysql_data_dir}} --user={{mysql_user}}"
+    - "{{mysql_home}}/bin/mysql_ssl_rsa_setup"
+  tags:
+    - mysql7

@@ -1,0 +1,21 @@
+---
+- name: Add ppa Repository
+  become: yes
+  apt_repository: repo='ppa:ondrej/{{ php_ppa }}'
+
+- name: Update apt
+  become: yes
+  apt: update_cache=yes
+
+- name: Install php{{ php_version }}
+  become: yes
+  apt: pkg='php{{ php_version }}' state=latest
+
+- name: Install PHP Packages
+  become: yes
+  apt: pkg={{ item }} state=latest
+  with_items: '{{ php_packages }}'
+  when: php_packages is defined
+
+- include: 10-configure.yml
+- include: 20-pecl.yml

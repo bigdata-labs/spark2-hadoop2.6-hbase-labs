@@ -1,0 +1,89 @@
+---
+# 安装openresty，不作配置
+- name: install prepare software
+  apt: name="{{item}}" state=present
+  sudo: true
+  with_items:
+    - "libreadline-dev"
+    - "libpcre3-dev"
+    - "libssl-dev"
+    - "perl"
+    - "build-essential"
+  tags:
+    - openresty
+
+- stat: path="/usr/local/openresty"
+  register: openresty
+  tags:
+    - openresty
+
+- name: download openresty
+  get_url:
+    url: "{{openresty_download_url}}"
+    dest: "/tmp"
+    validate_certs: no
+  when: openresty.stat.exists == False
+  tags:
+    - openresty
+
+- name: install nginx
+  unarchive: src="/tmp/{{openresty_version}}.tar.gz" dest="/tmp" mode="go-w" copy=no
+  when: openresty.stat.exists == False
+  tags:
+    - openresty
+
+- shell: "cd /tmp/{{openresty_version}}/ && sudo ./configure --with-luajit  "
+  when: openresty.stat.exists == False
+  tags:
+    - openresty
+
+- shell: "cd /tmp/{{openresty_version}}/  && make && sudo make install"
+  when: openresty.stat.exists == False
+  tags:
+    - openresty
+
+- file: src="/usr/local/openresty" dest="/usr/local/nginx" owner=root group=root state=link
+  tags:
+    - openresty
+
+- template: src="nginx.conf" force=true dest="/usr/local/openresty/nginx/conf/" owner=root group=root
+  tags:
+    - openresty
+
+- name: mkdir log folder
+  file: path="{{nginx_log_path}}" owner=nobody group=root state=directory mode=0755
+  tags:
+    - openresty
+- name: copy nginx.service to /etc/systemd/system/
+  template: src="nginx.service" dest="/etc/systemd/system/" force=true owner=root group=root
+  tags:
+    - openresty
+
+- name: reload systemd
+  command: "systemctl daemon-reload"
+  tags:
+    - openresty
+
+- name: mkdir serviers dir
+  file: path="{{nginx_servers_path}}" state=directory owner=root group=root recurse=true
+  tags:
+    - openresty
+
+- name: cut log
+  file: path="{{nginx_log_cut_path}}" owner=nobody group=root state=directory mode=0755
+  tags:
+    - openresty
+
+- name: template log cut sh
+  template: src="log_cut.sh" dest="/var/run" mode=0766 force=true
+  tags:
+    - openresty
+
+- name: cron execute log cut
+  cron: name="nginx log cut" minute="00" hour="00" day="*" month="*" job="sh /var/run/log_cut.sh" user=root
+  tags:
+    - openresty
+
+- service: name="nginx" state="restarted" enabled=yes
+  tags:
+    - openresty

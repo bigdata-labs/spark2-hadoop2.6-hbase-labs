@@ -1,0 +1,22 @@
+---
+- name: Set root Password
+  debconf:
+    name: mysql-community-server
+    question: 'mysql-community-server/root-pass'
+    value: '{{ mysql_root_pass }}' # Set as a variable
+    vtype: password
+
+- name: Set root Password Again
+  debconf:
+    name: mysql-community-server
+    question: 'mysql-community-server/re-root-pass'
+    value: '{{ mysql_root_pass }}' # Set as a variable
+    vtype: password
+
+- name: Install MySQL 5.7
+  apt:
+    pkg: '{{ item }}'
+    state: present
+    update_cache: true
+  with_items:
+    - mysql-server-5.7

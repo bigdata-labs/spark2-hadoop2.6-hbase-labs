@@ -1,0 +1,45 @@
+---
+- name: create mysql group
+  group:
+    name: "{{mysql_group}}"
+    system: yes
+  tags:
+    - mysql7
+
+- name: create mysql user
+  user:
+    name: "{{mysql_user}}"
+    group: "{{mysql_group}}"
+    createhome: no
+    system: yes
+  tags:
+    - mysql7
+
+- include: ./install-apt.yml
+
+- file:
+    path: "{{mysql_data_dir}}"
+    state: directory
+    recurse: true
+    owner: "{{mysql_user}}"
+    group: "{{mysql_group}}"
+  tags:
+    - mysql7
+
+- name: config mysql
+  template:
+    src: "my.cnf"
+    dest: "/etc/my.cnf"
+    owner: "{{mysql_user}}"
+    group: "{{mysql_group}}"
+  tags:
+    - mysql7
+
+
+- name: "restart mysqld"
+  become: yes
+  service:
+    name: mysql
+    state: restarted
+  tags:
+    - mysql7

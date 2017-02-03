@@ -2,7 +2,7 @@
 # 安装openresty，不作配置
 - name: install prepare software
   apt: name="{{item}}" state=present
-  sudo: true
+  become: true
   with_items:
     - "libreadline-dev"
     - "libpcre3-dev"
@@ -32,58 +32,70 @@
   tags:
     - openresty
 
-- shell: "cd /tmp/{{openresty_version}}/ && sudo ./configure --with-luajit  "
-  when: openresty.stat.exists == False
-  tags:
-    - openresty
-
-- shell: "cd /tmp/{{openresty_version}}/  && make && sudo make install"
+- shell: "{{item}}"
+  become: true
+  args:
+    chdir: "/tmp/{{openresty_version}}/"
+  with_items:
+    - ./configure --with-luajit
+    - make
+    - make install
   when: openresty.stat.exists == False
   tags:
     - openresty
 
 - file: src="/usr/local/openresty" dest="/usr/local/nginx" owner=root group=root state=link
+  become: true
   tags:
     - openresty
 
 - template: src="nginx.conf" force=true dest="/usr/local/openresty/nginx/conf/" owner=root group=root
+  become: true
   tags:
     - openresty
 
 - name: mkdir log folder
   file: path="{{nginx_log_path}}" owner=nobody group=root state=directory mode=0755
+  become: true
   tags:
     - openresty
 - name: copy nginx.service to /etc/systemd/system/
   template: src="nginx.service" dest="/etc/systemd/system/" force=true owner=root group=root
+  become: true
   tags:
     - openresty
 
 - name: reload systemd
   command: "systemctl daemon-reload"
+  become: true
   tags:
     - openresty
 
 - name: mkdir serviers dir
   file: path="{{nginx_servers_path}}" state=directory owner=root group=root recurse=true
+  become: true
   tags:
     - openresty
 
 - name: cut log
   file: path="{{nginx_log_cut_path}}" owner=nobody group=root state=directory mode=0755
+  become: true
   tags:
     - openresty
 
 - name: template log cut sh
   template: src="log_cut.sh" dest="/var/run" mode=0766 force=true
+  become: true
   tags:
     - openresty
 
 - name: cron execute log cut
   cron: name="nginx log cut" minute="00" hour="00" day="*" month="*" job="sh /var/run/log_cut.sh" user=root
+  become: true
   tags:
     - openresty
 
 - service: name="nginx" state="restarted" enabled=yes
+  become: true
   tags:
     - openresty

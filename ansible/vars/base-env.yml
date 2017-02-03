@@ -88,7 +88,12 @@ nginx_servers_path: /usr/local/nginx/nginx/conf/servers
 
 ### zabbix
 zabbix_nginx_conf:  /usr/local/nginx/nginx/conf/servers
-
+zabbixserver: zabbixserver
+zabbix_mysql_dbname: zabbix
+zabbix_mysql_username: zabbix
+zabbix_mysql_password: sda_A12ecretxx
+zabbix_mysql_port: 3306
+mysql_user_password: xxxxxx
 
 
 ###common
@@ -106,6 +111,7 @@ hosts: |
   192.168.11.153 hadoopdatanode2
   192.168.11.153 hbasemaster
   192.168.11.154 gangliamaster
+  192.168.11.154 zabbixserver
   {{ kafka1_host }} kafka1
   {{ zk1_host }} zk1
   {{ zk2_host }} zk2

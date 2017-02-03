@@ -8,7 +8,7 @@
        name: apache2
        state: absent
   roles:
-    - mysql7
+    - mysql
     - openresty
     - php
     - { role: "zabbix3", zabbixType: "server"}

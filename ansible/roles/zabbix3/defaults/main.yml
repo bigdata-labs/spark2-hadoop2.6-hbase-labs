@@ -3,7 +3,11 @@
 zabbix_version: 3.2.3
 zabbix_user: zabbix
 zabbix_group: zabbix
-zabbix_home: /home/{{zabbix_user}}/zabbix
+zabbix_user_home: "/home/{{zabbix_user}}"
+zabbix_home: "{{zabbix_user_home}}/zabbix"
+zabbix_tar_exact_path: "{{zabbix_user_home}}/zabbix-{{ zabbix_version }}"
+zabbix_frontends_path: "{{zabbix_home}}/frontends/"
+zabbix_log_dir: /var/log/zabbix
 zabbix_download_url: "http://repo.zabbix.com/zabbix/3.2/ubuntu/pool/main/z/zabbix/zabbix_{{zabbix_version}}.orig.tar.gz"
 zabbixserver_packages:
   - build-essential

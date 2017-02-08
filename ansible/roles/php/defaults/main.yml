@@ -4,3 +4,4 @@ php_ppa:              php
 php_version:          "5.6"
 php_packages:         ["php{{ php_version }}-fpm", "php{{ php_version }}-cli", "php{{ php_version }}-intl", "php{{ php_version }}-mcrypt", "php{{ php_version }}-mysql", "php{{ php_version }}-gd"]
 php_server_timezone:  UTC
+php_fpm_socket_path: "/run/php/php{{php_version}}-fpm.sock"

@@ -61,11 +61,18 @@
   tags:
     - zabbix3
 
+
+- name: already make install
+  stat: path="{{zabbix_home}}"
+  register: zabbixAlreadyMakeInstall
+  tags:
+    - zabbix3
+
 - name: Configure Make install
   register: config_makefile
   #when: makefile_stat.stat.exists == False
   shell: "./configure  --prefix={{zabbix_home}} --enable-server --enable-web --with-net-snmp --with-libcurl --with-libcurl2 --with-ssh2 --with-unixodbc --with-mysql"
-  when: zabbixType == "server"
+  when: zabbixType == "server" and zabbixAlreadyMakeInstall.stat.exists == False
   args:
     chdir: "{{zabbix_tar_exact_path}}/"
   tags:
@@ -75,17 +82,19 @@
   register: config_makefile
   #when: makefile_stat.stat.exists == False
   shell: "./configure --enable-agent --prefix={{zabbix_home}}"
-  when: zabbixType == "agent"
+  when: zabbixType == "agent" and zabbixAlreadyMakeInstall.stat.exists == False
   args:
     chdir: "{{zabbix_tar_exact_path}}/"
   tags:
     - zabbix3
+
 
 - name: Make install
   become: yes
   shell: make install
   args:
     chdir: "{{zabbix_tar_exact_path}}/"
+  when: zabbixAlreadyMakeInstall.stat.exists == False
   tags:
     - zabbix3
 
@@ -93,6 +102,17 @@
   shell: "mysql -u{{zabbix_mysql_username}} -p{{ zabbix_mysql_password }} -e 'SHOW DATABASES;' | grep {{ zabbix_mysql_dbname }}"
   ignore_errors: yes
   register: server_dbstatus
+  tags:
+    - zabbix3
+
+- name: config zabbix
+  template:
+    src: zabbix_server.conf
+    dest: "{{zabbix_home}}/etc/"
+    owner: "{{zabbix_user}}"
+    group: "{{zabbix_group}}"
+    mode: "ug=rw,o=r"
+  when: zabbixType == "server"
   tags:
     - zabbix3
 
@@ -115,7 +135,7 @@
 - name: import mysql schema table
   mysql_db: name={{ zabbix_mysql_dbname }} state=import target={{zabbix_tar_exact_path}}/database/mysql/schema.sql
   when: server_dbstatus.rc != 0 and zabbixType == "server"
-  # no_log: true
+  no_log: true
   tags:
     - zabbix3
 
@@ -136,6 +156,8 @@
 - name: copy zabbix php
   shell: "cp -r {{zabbix_tar_exact_path}}/frontends/php/ {{zabbix_frontends_path}}"
   become: yes
+  tags:
+    - zabbix3
 
 - name: set owner
   file:
@@ -143,7 +165,7 @@
     recurse: true
     owner: "root"
     group: "root"
-    mode: "ug=rwx,o=rw"
+    mode: "ug=rwx,o=rwx"
   tags:
     - zabbix3
 

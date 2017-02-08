@@ -8,8 +8,6 @@ wordcount_result_directory: /wordcount_result/
 users_csv_filename: users.csv
 
 
-
-
 ### JVM
 JAVA_HOME: /usr/lib/jvm/java
 

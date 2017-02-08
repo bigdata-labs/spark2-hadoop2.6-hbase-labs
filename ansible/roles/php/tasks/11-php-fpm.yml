@@ -14,3 +14,31 @@
 
 - name: Enabling opcache
   lineinfile: dest="/etc/php/{{ php_version }}/fpm/php.ini" regexp=';?opcache.enable=\d' line='opcache.enable=1'
+  notify: "restart php{{ php_version }}-fpm"
+
+- name: config php.ini
+  template:
+    src: php.ini
+    dest: "/etc/php/{{ php_version }}/fpm/"
+    owner: root
+    group: root
+    mode: "ug=rw,o=r"
+  notify: "restart php{{ php_version }}-fpm"
+
+- name: config www.conf
+  template:
+    src: www.conf
+    dest: "/etc/php/{{ php_version }}/fpm/pool.d/"
+    owner: root
+    group: root
+    mode: "ug=rw,o=r"
+  notify: "restart php{{ php_version }}-fpm"
+
+- name: config php-fpm
+  template:
+    src: php-fpm.conf
+    dest: "/etc/php/{{php_version}}/fpm/"
+    owner: root
+    group: root
+    mode: "ug=rw,o=rw"
+  notify: "restart php{{ php_version }}-fpm"

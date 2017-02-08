@@ -9,10 +9,10 @@
        state: absent
   roles:
     - mysql
-    - openresty
     - php
     - { role: "zabbix3", zabbixType: "server"}
     - { role: "zabbix3", zabbixType: "agent"}
+    - openresty
     - zabbix-openresty-conf
 
 - hosts: all
